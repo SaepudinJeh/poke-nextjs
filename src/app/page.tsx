@@ -1,22 +1,27 @@
 "use client"
 
 import Card from "@/components/micro/card.micro";
+import { ENV } from "@/libs/constants/env.constants";
 import useAxios from "axios-hooks";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
+import dynamic from 'next/dynamic'
+ 
+const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
+  ssr: false,
+})
+
 export default function Home() {
   const router = useRouter()
-  const [{ data, loading, error }, refetch] = useAxios('http://localhost:3000/v1/poke');
+  const [{ data, loading, error }, refetch] = useAxios(`${ENV.BASE_URL}/poke`);
 
   useEffect(() => {refetch}, [refetch])
 
-  useMemo(() => { console.log(data?.data?.data);
-   }, [data])
-
   return (
     <main className="flex flex-col min-h-screen items-center justify-center p-10 w-full max-w-xl bg-gray-100 mx-auto shadow-lg">
-      <div className="grid grid-cols-2 gap-3 w-full">
+      <Navbar />
+      <div className="grid grid-cols-2 gap-3 w-full mt-10">
         { data?.data?.data && data.data.data.map((val: any) => (
           <Card onClick={async() => router.push(`poke/${val?.name}`)} key={val?.name} height={val?.height} img={val?.img} name={val?.name} weight={val?.weight} />
         )) }
