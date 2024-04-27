@@ -5,8 +5,7 @@ import { useAuth } from "@/contexts/auth.context";
 import { ENV } from "@/libs/constants/env.constants";
 import useAxios from "axios-hooks";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Swal from "sweetalert2";
 
 const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
@@ -14,24 +13,40 @@ const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
 })
 
 export default function Home() {
-  const router = useRouter()
   const { user } = useAuth()
-  
-  const [idPoke, setIdPoke] = useState<number | null>();
-  const [dataEdit, setDateEdit] = useState<Record<string, any> | null>(null)
 
   const [{ data }, refetch] = useAxios({ baseURL: `${ENV.BASE_URL}/my-deck`, method: "POST", data: { username: user } }, { manual: true, autoCancel: false });
 
-  const [{}, refetchRelease] = useAxios({ baseURL: `${ENV.BASE_URL}/release-poke`, method: "POST", data: { id: idPoke } }, { manual: true, autoCancel: false });
+  const [{}, refetchRelease] = useAxios({ baseURL: `${ENV.BASE_URL}/release-poke`, method: "POST" }, { manual: true, autoCancel: false });
 
-  const [{ data: responseEdit, loading: loadingEdit, error: errorEdit }, refetchEdit] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
+  const [{}, refetchEdit] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
 
   useEffect(() => {
     refetch()
   }, [])
 
   const handleRelease = (id: number) => {
-    refetchRelease({ data: { id } })
+    refetchRelease({ data: { id } }).then((res) => {
+      if(res?.data?.data?.isPrime) {
+        Swal.fire({
+          title: "Successfully Released the Pokémon",
+          icon: "success",
+          timerProgressBar: true,
+          timer: 1500
+        })
+        
+        refetch()
+
+        return;
+      } else {
+        Swal.fire({
+          title: "Failed To Release The Pokémon",
+          icon: "error",
+          timerProgressBar: true,
+          timer: 1500
+        })
+      }
+    })
   }
 
   const handleEdit = (id: number) => {
@@ -53,7 +68,7 @@ export default function Home() {
               Swal.showValidationMessage(`Please enter your poke!`);
             }
 
-            refetchEdit({ data: { id, name } })
+            refetchEdit({ data: { id, name } }).then(() => refetch())
           },
         });
   }

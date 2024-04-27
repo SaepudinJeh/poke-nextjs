@@ -77,7 +77,6 @@ export default function AuthProvider({
               try {       
                 executePut({data: { username: name }}).then((data) => {
                     if (data?.status === 200) {
-                      // Close the modal upon successful login
                       setUser(name);
                       sessionStorage.setItem('credential', data?.data?.data?.username)
                       return true;

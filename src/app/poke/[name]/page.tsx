@@ -12,11 +12,6 @@ import { ENV } from "@/libs/constants/env.constants";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth.context";
 
-interface IDataCatch {
-  poke: string | null;
-  username: string | null;
-}
-
 export default function DetailPoke({ params }: { params: { name: string } }) {
   const router = useRouter();
   const { user } = useAuth();
@@ -24,8 +19,6 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
   const [loadingCatch, setLoadingCatch] = useState<boolean>(false);
 
   const [{ data }] = useAxios( `${ENV.BASE_URL}/poke/${params.name}` );
-
-  const [dataCatch, setDataCatch] = useState<IDataCatch>({ poke: params?.name, username: user });
 
   const [{ data: responseCatch, error: errorCatch }, refetch] = useAxios(
     {
@@ -36,7 +29,7 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
     { manual: true }
   );
 
-  const [{ data: responseEdit, loading: loadingEdit, error: errorEdit }, executePut] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
+  const [{ }, executePut] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
 
   const handleCatch = () => {
     setLoadingCatch(true);
@@ -139,7 +132,6 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
 
       {data?.data?.sprites?.front_default && (
         <div className="bg-opacity-75 rounded-lg z-50 relative w-56">
-          {/* <Image src={data?.data?.sprites?.other?.home?.front_default} alt={data?.data?.name} fill sizes="100vw" className="h-44 w-44 relative"/> */}
           <Image
             src={data?.data?.sprites?.other?.home?.front_default}
             alt={data?.data?.name}
