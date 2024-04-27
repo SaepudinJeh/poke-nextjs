@@ -18,7 +18,7 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
 
   const [loadingCatch, setLoadingCatch] = useState<boolean>(false);
 
-  const [{ data }] = useAxios( `${ENV.BASE_URL}/poke/${params.name}` );
+  const [{ data }] = useAxios(`${ENV.BASE_URL}/poke/${params.name}`);
 
   const [{ data: responseCatch, error: errorCatch }, refetch] = useAxios(
     {
@@ -29,7 +29,10 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
     { manual: true }
   );
 
-  const [{ }, executePut] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
+  const [{}, executePut] = useAxios(
+    { baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" },
+    { manual: true }
+  );
 
   const handleCatch = () => {
     setLoadingCatch(true);
@@ -41,28 +44,28 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
   };
 
   useMemo(() => {
-    if(errorCatch) {
-        Swal.fire({
+    if (errorCatch?.response?.data?.message?.includes("Poke already saved!")) {
+      Swal.fire({
+        title: "Pokemon Already Saved!",
+        icon: "success",
+        didClose() {
+          router.push("/my-deck");
+        },
+      });
+    } else {
+      Swal.fire({
         title: "Error!",
         icon: "error",
         didClose() {
-            router.push("/");
+          router.push("/");
         },
-        });
+      });
     }
   }, [errorCatch]);
 
   useMemo(() => {
     if (responseCatch) {
-        if(responseCatch?.data?.message?.includes("Poke already saved!")) {
-            Swal.fire({
-                title: "Pokemon Already Saved!",
-                icon: "success",
-                didClose() {
-                  router.push("/my-deck");
-                },
-              });
-        } else if (responseCatch?.data?.probability) {
+      if (responseCatch?.data?.probability) {
         Swal.fire({
           imageUrl: data?.data?.sprites?.other?.home?.front_default,
           imageAlt: data?.data?.name,
@@ -87,11 +90,13 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
                 if (!name) {
                   Swal.showValidationMessage(`Please enter your poke!`);
                 }
-                
-                try {       
-                  executePut({ data: { id: responseCatch?.data?.result?.id, name } })
+
+                try {
+                  executePut({
+                    data: { id: responseCatch?.data?.result?.id, name },
+                  });
                 } catch (error) {
-                  console.error('Error:', error);
+                  console.error("Error:", error);
                   Swal.showValidationMessage(`Login failed. Please try again.`);
                   return false;
                 }
@@ -99,25 +104,24 @@ export default function DetailPoke({ params }: { params: { name: string } }) {
             }).then((result) => {
               if (result.isConfirmed) {
                 Swal.fire({
-                  icon: 'success',
-                  title: 'Success Saved In Your Deck!',
+                  icon: "success",
+                  title: "Success Saved In Your Deck!",
                   showConfirmButton: false,
-                  timer: 1500 // Close success message after 1.5 seconds
-                }).then(() => router.replace('/my-deck'));
+                  timer: 1500, // Close success message after 1.5 seconds
+                }).then(() => router.replace("/my-deck"));
               }
             });
           },
         });
       } else {
-          Swal.fire({
-            title: `${params?.name} pokemon escapes!`,
-            icon: "error",
-            didClose() {
-              return router.push("/");
-            },
-          });
+        Swal.fire({
+          title: `${params?.name} pokemon escapes!`,
+          icon: "error",
+          didClose() {
+            return router.push("/");
+          },
+        });
       }
-
     }
   }, [responseCatch]);
 
