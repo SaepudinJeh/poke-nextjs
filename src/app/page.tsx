@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import dynamic from 'next/dynamic'
+import AuthProvider from "@/contexts/auth.context";
  
 const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
   ssr: false,
@@ -19,6 +20,7 @@ export default function Home() {
   useEffect(() => {refetch}, [refetch])
 
   return (
+    <AuthProvider>
     <main className="flex flex-col min-h-screen items-center justify-center p-10 w-full max-w-xl bg-gray-100 mx-auto shadow-lg">
       <Navbar />
       <div className="grid grid-cols-2 gap-3 w-full mt-10">
@@ -27,5 +29,6 @@ export default function Home() {
         )) }
       </div>
     </main>
+    </AuthProvider>
   );
 }

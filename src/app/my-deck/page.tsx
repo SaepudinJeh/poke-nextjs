@@ -1,11 +1,12 @@
 "use client"
 
 import Card from "@/components/micro/card.micro";
+import { useAuth } from "@/contexts/auth.context";
 import { ENV } from "@/libs/constants/env.constants";
 import useAxios from "axios-hooks";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
@@ -14,65 +15,30 @@ const Navbar = dynamic(() => import("@/components/common/navbar.common"), {
 
 export default function Home() {
   const router = useRouter()
-
-  const [username, setUsername] = useState<string>(window && window.sessionStorage.getItem('credential')!);
+  const { user } = useAuth()
+  
   const [idPoke, setIdPoke] = useState<number | null>();
   const [dataEdit, setDateEdit] = useState<Record<string, any> | null>(null)
 
-  const [{ data }, refetch] = useAxios({
-    baseURL: `${ENV.BASE_URL}/my-deck`,
-    method: "POST",
-    data: { username }
-  }, { manual: true, autoCancel: false });
+  const [{ data }, refetch] = useAxios({ baseURL: `${ENV.BASE_URL}/my-deck`, method: "POST", data: { username: user } }, { manual: true, autoCancel: false });
 
-  const [{}, refetchRelease] = useAxios({
-    baseURL: `${ENV.BASE_URL}/release-poke`,
-    method: "POST",
-    data: { id: idPoke }
-  }, { manual: true, autoCancel: false });
+  const [{}, refetchRelease] = useAxios({ baseURL: `${ENV.BASE_URL}/release-poke`, method: "POST", data: { id: idPoke } }, { manual: true, autoCancel: false });
 
-  const [{ data: responseEdit, loading: loadingEdit, error: errorEdit }, refetchEdit] = useAxios({
-    baseURL: `${ENV.BASE_URL}/rename-poke`,
-    method: "POST",
-    data: dataEdit
-  }, { manual: true });
+  const [{ data: responseEdit, loading: loadingEdit, error: errorEdit }, refetchEdit] = useAxios({ baseURL: `${ENV.BASE_URL}/rename-poke`, method: "POST" }, { manual: true });
 
   useEffect(() => {
-    const getUsername = window && window.sessionStorage.getItem('credential');    
-    if(getUsername) {
-      refetch()
-    }
-  }, [])
-
-  useEffect(() => {
-    if(idPoke) {
-      refetchRelease()
-      refetch()
-    }
-  }, [idPoke])
-
-  useEffect(() => {
-    if(dataEdit) {
-      refetchEdit()
-      refetch()
-    }
-  }, [dataEdit])
-
-  useEffect(() => {
-    
+    refetch()
   }, [])
 
   const handleRelease = (id: number) => {
-    return setIdPoke(id)
+    refetchRelease({ data: { id } })
   }
 
   const handleEdit = (id: number) => {
     let nameInput: HTMLInputElement;
         Swal.fire({
           title: "Rename Your Poke",
-          html: `
-                    <input type="text" id="name" class="swal2-input" placeholder="Name Poke...">
-                `,
+          html: ` <input type="text" id="name" class="swal2-input" placeholder="Name Poke..."> `,
           confirmButtonText: "Rename Poke",
           focusConfirm: false,
           didOpen: () => {
@@ -87,9 +53,7 @@ export default function Home() {
               Swal.showValidationMessage(`Please enter your poke!`);
             }
 
-            setDateEdit(e => ({ ...e, id, name: name }));
-
-            refetchEdit()
+            refetchEdit({ data: { id, name } })
           },
         });
   }
